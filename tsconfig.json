@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    /* ---------- Language & Runtime ---------- */
+    "target": "ES2021",
+    "lib": ["ES2021"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+
+    /* ---------- Paths ---------- */
+    "baseUrl": "./src",
+    "paths": {
+      "@config/*": ["config/*"],
+      "@common/*": ["common/*"],
+      "@services/*": ["services/*"],
+      "@repositories/*": ["repositories/*"],
+      "@controllers/*": ["controllers/*"],
+      "@models/*": ["models/*"],
+      "@routes/*": ["routes/*"],
+      "@validators/*": ["validators/*"]
+    },
+
+    /* ---------- Project Structure ---------- */
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    /* ---------- Strictness ---------- */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+
+    /* ---------- Interop & Compatibility ---------- */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* ---------- Performance ---------- */
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+
+    /* ---------- Types ---------- */
+    "types": ["node"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "tests"]
+}
