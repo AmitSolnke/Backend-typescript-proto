@@ -41,4 +41,18 @@ export class EmployeeFamilyRepository {
       updated_at: new Date(),
     });
   }
+
+  async deactivateByEmployee(tenantId: number, empId: number, userId: number, now: Date) {
+    return db(this.table)
+      .where({
+        tenant_id: tenantId,
+        emp_id: empId,
+        is_active: 1,
+      })
+      .update({
+        is_active: 0,
+        updated_at: now,
+        updated_by: userId,
+      });
+  }
 }

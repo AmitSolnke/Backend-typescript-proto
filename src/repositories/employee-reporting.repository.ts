@@ -73,4 +73,24 @@ export class EmployeeReportingRepository {
       updated_at: new Date(),
     });
   }
+  async deactivateByEmployeeAndType(
+    tenantId: number,
+    empId: number,
+    type: string,
+    userId: number,
+    now: Date,
+  ) {
+    return db(this.table)
+      .where({
+        tenant_id: tenantId,
+        emp_id: empId,
+        type,
+        is_active: 1,
+      })
+      .update({
+        is_active: 0,
+        updated_at: now,
+        updated_by: userId,
+      });
+  }
 }

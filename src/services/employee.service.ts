@@ -118,6 +118,13 @@ export class EmployeeService {
      */
 
     if (body.reporting_to) {
+      await this.reportingRepo.deactivateByEmployeeAndType(
+        body.tenant_id,
+        employeeId,
+        REPORTING_TYPE.REPORTING_TO,
+        userId,
+        now,
+      );
       await this.reportingRepo.create({
         tenant_id: body.tenant_id,
         emp_id: employeeId,
@@ -131,6 +138,14 @@ export class EmployeeService {
     }
 
     if (body.leave_auth_manager) {
+      await this.reportingRepo.deactivateByEmployeeAndType(
+        body.tenant_id,
+        employeeId,
+        REPORTING_TYPE.LEAVE_AUTH_MANAGER,
+        userId,
+        now,
+      );
+
       for (const auth_manager of body.leave_auth_manager) {
         await this.reportingRepo.create({
           tenant_id: body.tenant_id,
@@ -152,6 +167,8 @@ export class EmployeeService {
      * No delete/update logic added here intentionally.
      */
     if (Array.isArray(body.educational_details)) {
+      await this.educationRepo.deactivateByEmployee(body.tenant_id, employeeId, userId, now);
+
       for (const edu of body.educational_details) {
         await this.educationRepo.create({
           tenant_id: body.tenant_id,
@@ -171,6 +188,8 @@ export class EmployeeService {
 
     /* ---------------- PROFESSIONAL ---------------- */
     if (Array.isArray(body.professional_details)) {
+      await this.professionalRepo.deactivateByEmployee(body.tenant_id, employeeId, userId, now);
+
       for (const prof of body.professional_details) {
         await this.professionalRepo.create({
           tenant_id: body.tenant_id,
@@ -192,6 +211,7 @@ export class EmployeeService {
 
     /* ---------------- FAMILY ---------------- */
     if (Array.isArray(body.family_details)) {
+      await this.familyRepo.deactivateByEmployee(body.tenant_id, employeeId, userId, now);
       for (const fam of body.family_details) {
         await this.familyRepo.create({
           tenant_id: body.tenant_id,
