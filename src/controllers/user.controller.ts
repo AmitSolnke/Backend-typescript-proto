@@ -41,4 +41,6 @@ export class UserController {
       }
     }
   };
+
+  postEmployee = async (req: Request, res: Response) => {};
 }
