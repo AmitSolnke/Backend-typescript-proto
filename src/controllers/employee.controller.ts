@@ -58,3 +58,21 @@ export const getEmployee = async (req: Request, res: Response) => {
     data: { data },
   });
 };
+
+export const getAllEmployees = async (req: Request, res: Response) => {
+  const tenantId = Number(req.tenantId ?? 1);
+
+  const service = new EmployeeService();
+
+  const data = await service.getAllEmployees({
+    tenantId,
+  });
+
+  res.status(200).send({
+    status: 1,
+    message: 'Record Found',
+    data: {
+      data,
+    },
+  });
+};

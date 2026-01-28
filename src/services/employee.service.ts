@@ -553,4 +553,117 @@ export class EmployeeService {
       employee_attachments: [],
     };
   }
+
+  async getAllEmployees(input: { tenantId: number }) {
+    const { tenantId } = input;
+
+    logger.info({ tenantId }, 'Fetching employee list');
+
+    const employees = await this.employeeRepo.findAll(tenantId);
+
+    if (!employees || !employees.length) return [];
+
+    const employeeIds = employees.map((e) => e.id);
+
+    const [reportingToList, leaveAuthManagers] = await Promise.all([
+      this.reportingRepo.findActiveByEmployeesAndType(
+        tenantId,
+        employeeIds,
+        REPORTING_TYPE.REPORTING_TO,
+      ),
+      this.reportingRepo.findActiveByEmployeesAndType(
+        tenantId,
+        employeeIds,
+        REPORTING_TYPE.LEAVE_AUTH_MANAGER,
+      ),
+    ]);
+
+    const reportingToMap = new Map<number, any>();
+    reportingToList.forEach((r) => reportingToMap.set(r.emp_id, r));
+
+    const leaveAuthMap = new Map<number, any[]>();
+    leaveAuthManagers.forEach((r) => {
+      if (!leaveAuthMap.has(r.emp_id)) {
+        leaveAuthMap.set(r.emp_id, []);
+      }
+      leaveAuthMap.get(r.emp_id)!.push(r);
+    });
+
+    return Promise.all(
+      employees.map(async (emp) => {
+        const reportingTo = reportingToMap.get(emp.id);
+        const leaveManagers = leaveAuthMap.get(emp.id) ?? [];
+
+        return {
+          id: emp.id,
+          name: emp.first_name,
+          tenant_id: emp.tenant_id,
+          account_for: emp.account_for,
+          customer_id: emp.customer_id,
+
+          employee_id: emp.employee_id,
+          first_name: emp.first_name,
+          middle_name: emp.middle_name,
+          last_name: emp.last_name,
+          email_id: emp.email_id,
+
+          whats_app_contact_no: emp.whats_app_contact_no,
+          contact_no: emp.contact_no,
+
+          role_id: emp.role_id,
+          department_id: emp.department_id,
+          designation_id: emp.designation_id,
+
+          gender: emp.gender,
+          address: emp.address,
+
+          city_id: emp.city_id,
+          state_id: emp.state_id,
+          country_id: emp.country_id,
+          pincode: emp.pincode,
+
+          profile_picture: emp.profile_picture,
+          user_name: emp.user_name,
+
+          hash_key: emp.hash_key,
+          jwt_token: emp.jwt_token,
+          last_login: emp.last_login,
+
+          job_role: emp.job_role,
+          remark: emp.remark,
+
+          is_active: emp.is_active,
+          created_at: emp.created_at,
+          created_by: emp.created_by,
+          updated_at: emp.updated_at,
+          updated_by: emp.updated_by,
+
+          is_superadmin: emp.is_superadmin,
+          preferred_communication: emp.preferred_communication,
+
+          actual_tenant_id: emp.actual_tenant_id,
+          password_changed_at: emp.password_changed_at,
+          device_id: emp.device_id,
+
+          branch_id: emp.hired_branch_id,
+
+          shift_type_id: emp.shift_type_id,
+
+          reporting_to_id: reportingTo?.reporting_manager ?? null,
+          reporting_to_name: reportingTo
+            ? await this.resolveEmployeeName(tenantId, reportingTo.reporting_manager)
+            : null,
+
+          reporting_to_mangers: [],
+
+          leave_auth_managers: await Promise.all(
+            leaveManagers.map(async (m) => ({
+              id: m.reporting_manager,
+              name: await this.resolveEmployeeName(tenantId, m.reporting_manager),
+            })),
+          ),
+        };
+      }),
+    );
+  }
 }

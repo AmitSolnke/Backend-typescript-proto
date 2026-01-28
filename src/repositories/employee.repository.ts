@@ -61,4 +61,13 @@ export class EmployeeRepository {
   } | null> {
     return db(this.table).select('id', 'tenant_id', 'employee_id').where({ id }).first();
   }
+
+  async findAll(tenantId: number): Promise<Employee[] | undefined> {
+    return db<Employee>(this.table)
+      .where({
+        tenant_id: tenantId,
+        is_active: 1,
+      })
+      .orderBy('id', 'desc');
+  }
 }

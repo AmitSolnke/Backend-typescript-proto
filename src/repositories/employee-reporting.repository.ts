@@ -93,4 +93,14 @@ export class EmployeeReportingRepository {
         updated_by: userId,
       });
   }
+
+  async findActiveByEmployeesAndType(tenantId: number, empIds: number[], type: string) {
+    return db(this.table)
+      .where({
+        tenant_id: tenantId,
+        type,
+        is_active: 1,
+      })
+      .whereIn('emp_id', empIds);
+  }
 }
