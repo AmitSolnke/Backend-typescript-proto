@@ -38,6 +38,18 @@ export class EmployeeReportingRepository {
       })
       .first();
   }
+  async findAllByEmployeeAndType(
+    tenantId: number,
+    empId: number,
+    type: keyof typeof REPORTING_TYPE,
+  ): Promise<EmployeeReportingManager[] | undefined> {
+    return db<EmployeeReportingManager>(this.table).where({
+      tenant_id: tenantId,
+      emp_id: empId,
+      type,
+      is_active: 1,
+    });
+  }
 
   async create(payload: any): Promise<number> {
     console.log('Payload in Employee Reporting Repository Create:', payload);

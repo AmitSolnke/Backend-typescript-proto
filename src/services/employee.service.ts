@@ -29,7 +29,7 @@ export class EmployeeService {
   private familyRepo: EmployeeFamilyRepository;
   private reportingRepo: EmployeeReportingRepository;
 
-  constructor(private trx: Knex.Transaction) {
+  constructor(private trx?: Knex.Transaction) {
     this.employeeRepo = new EmployeeRepository();
     this.detailsRepo = new EmployeeDetailsRepository();
     this.joiningRepo = new EmployeeJoiningRepository();
@@ -368,5 +368,161 @@ export class EmployeeService {
     logger.info({ employeeId }, 'Employee aggregate created successfully');
 
     return employeeId;
+  }
+  private async resolveEmployeeName(tenantId: number, empId: number): Promise<string | null> {
+    const emp = await this.employeeRepo.findById(tenantId, empId);
+
+    if (!emp) return null;
+
+    return `${emp.first_name ?? ''} ${emp.last_name ?? ''}`.trim();
+  }
+  async getEmployeeAggregate(tenantId: number, employeeId: number) {
+    logger.info({ employeeId }, 'Fetching employee aggregate');
+
+    /* ---------------- EMPLOYEE MASTER ---------------- */
+    const employee = await this.employeeRepo.findById(tenantId, employeeId);
+
+    if (!employee) {
+      throw new Error('Employee not found');
+    }
+
+    /* ---------------- PARALLEL CHILD FETCH ---------------- */
+    const [
+      employeeDetails,
+      joiningDetails,
+      professionalDetails,
+      educationalDetails,
+      familyDetails,
+      reportingTo,
+      leaveAuthManagers,
+    ] = await Promise.all([
+      this.detailsRepo.findByEmployee(tenantId, employeeId),
+      this.joiningRepo.findByEmployee(tenantId, employeeId),
+      this.professionalRepo.findByEmployee(tenantId, employeeId),
+      this.educationRepo.findByEmployee(tenantId, employeeId),
+      this.familyRepo.findByEmployee(tenantId, employeeId),
+      this.reportingRepo.findByEmployeeAndType(tenantId, employeeId, REPORTING_TYPE.REPORTING_TO),
+      this.reportingRepo.findAllByEmployeeAndType(
+        tenantId,
+        employeeId,
+        REPORTING_TYPE.LEAVE_AUTH_MANAGER,
+      ),
+    ]);
+
+    /* ---------------- REPORTING NAME RESOLUTION ---------------- */
+    const reportingToName = reportingTo
+      ? reportingTo.reporting_manager &&
+        (await this.resolveEmployeeName(tenantId, reportingTo.reporting_manager))
+      : null;
+
+    const leaveAuthManagerNames = leaveAuthManagers
+      ? await Promise.all(
+          leaveAuthManagers.map(async (mgr) => ({
+            id: mgr.reporting_manager,
+            name: mgr.reporting_manager
+              ? await this.resolveEmployeeName(tenantId, mgr.reporting_manager)
+              : null,
+          })),
+        )
+      : [];
+
+    /* ---------------- RESPONSE SHAPING ---------------- */
+    return {
+      id: employee.id,
+      tenant_id: employee.tenant_id,
+      actual_tenant_id: employee.actual_tenant_id,
+      employee_id: employee.employee_id,
+      account_for: employee.account_for,
+      customer_id: employee.customer_id,
+
+      first_name: employee.first_name,
+      middle_name: employee.middle_name,
+      last_name: employee.last_name,
+      email_id: employee.email_id,
+
+      preferred_communication: employee.preferred_communication,
+      whats_app_contact_no: employee.whats_app_contact_no,
+      contact_no: employee.contact_no,
+
+      role_id: employee.role_id,
+      designation_id: employee.designation_id,
+      gender: employee.gender,
+
+      address: employee.address,
+      city_id: employee.city_id,
+      state_id: employee.state_id,
+      country_id: employee.country_id,
+      pincode: employee.pincode,
+
+      user_name: employee.user_name,
+      password: null,
+
+      profile_picture: employee.profile_picture ?? '',
+      job_role: employee.job_role,
+
+      is_active: employee.is_active,
+      created_at: employee.created_at,
+      updated_at: employee.updated_at,
+      created_by: employee.created_by,
+      updated_by: employee.updated_by,
+
+      department_id: employee.department_id,
+      department: [],
+
+      role: null,
+      jobRole: null, // lookup table pending
+
+      branch_id: employee.hired_branch_id,
+      branch_name: null, // lookup pending
+
+      shift_type_id: employee.shift_type_id,
+      shift_type_name: null, // lookup pending
+
+      reporting_to_id: reportingTo?.reporting_manager ?? null,
+      reporting_to_name: reportingToName,
+      reporting_to_mangers: [],
+
+      leave_auth_managers: leaveAuthManagerNames,
+
+      customer_type_id: String(employee.customer_id ?? 1),
+      leave_templates: [],
+
+      professional_details: professionalDetails.map((p) => ({
+        id: p.id,
+        company: p.company,
+        designation: p.designation,
+        experience: p.experience,
+        city: p.city,
+        office_contact_no: p.office_contact_no,
+        from_date: p.from_date,
+        to_date: p.to_date,
+      })),
+
+      educational_details: educationalDetails.map((e) => ({
+        id: e.id,
+        university: e.university,
+        passing_year: e.passing_year,
+        course_name: e.course_name,
+        grade: e.grade,
+      })),
+
+      family_details: familyDetails.map((f) => ({
+        id: f.id,
+        relation: f.relation,
+        relative_name: f.relative_name,
+        dob: f.dob,
+        aadhar_no: f.aadhar_no,
+        pan_no: f.pan_no,
+        aadhar_photo: f.aadhar_photo,
+        pan_photo: f.pan_photo,
+      })),
+
+      employee_details: {
+        ...employeeDetails,
+        ...joiningDetails,
+      },
+
+      employee_attachments: [],
+    };
   }
 }

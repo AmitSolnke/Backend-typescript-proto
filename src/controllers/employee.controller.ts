@@ -44,3 +44,17 @@ export const createEmployeeMaster = async (req: Request, res: Response) => {
     .status(StatusCodes.CREATED)
     .send(buildSuccessResponse({ employee_id: employeeId! }, 'Employee created successfully'));
 };
+
+export const getEmployee = async (req: Request, res: Response) => {
+  const employeeId = Number(req.params.employeeId);
+  const tenantId = Number(req.query.tenant_id ?? 1);
+
+  const service = new EmployeeService();
+  const data = await service.getEmployeeAggregate(tenantId, employeeId);
+
+  res.status(200).send({
+    status: 1,
+    message: 'Record Found',
+    data: { data },
+  });
+};
