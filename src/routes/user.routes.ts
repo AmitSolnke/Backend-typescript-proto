@@ -7,6 +7,7 @@ export function userRoutes() {
   const controller = createUserController();
 
   router.get('/', controller.getUsers);
+  router.post('/post', controller.postEmployee);
 
   return router;
 }

@@ -41,41 +41,67 @@ export class EmployeeService {
 
   async upsertEmployeeAggregate(input: EmployeeAggregateInput) {
     const { employeeId, body } = input;
+    const now = new Date();
 
     logger.info({ employeeId }, 'Upserting employee master');
 
     /* ---------------- EMPLOYEE MASTER ---------------- */
     await this.employeeRepo.update(body.tenant_id, employeeId, {
       employee_id: body.employee_id,
+
       first_name: body.first_name,
       middle_name: body.middle_name,
       last_name: body.last_name,
       email_id: body.email_id,
+      pincode: body.pincode,
+
       contact_no: body.contact_no,
       whats_app_contact_no: body.whats_app_contact_no,
+
+      role_id: body.job_role,
+      gender: body.gender,
+      department_id: body.department,
       designation_id: body.designation_id,
       job_role: body.job_role,
+      profile_picture: body.profile_picture,
+      country_id: body.country_id,
+      state_id: body.state_id,
+      city_id: body.city_id,
       shift_type_id: body.shift_type_id,
       hired_branch_id: body.hired_branch_id,
-      department_id: body.department,
+
       account_for: body.account_for,
       user_name: body.user_name,
-      is_active: body.is_active,
+
+      is_active: body.is_active ?? 1,
+
+      updated_by: body.updated_by,
+      updated_at: now,
     });
 
     /* ---------------- EMPLOYEE DETAILS ---------------- */
     await this.detailsRepo.update(body.tenant_id, employeeId, {
       personal_email_id: body.personal_email_id,
+
       dob: body.dob,
-      gender: body.gender,
       blood_group: body.blood_group,
       marital_status: body.marital_status,
+
       emergency_contact: body.emergency_contact,
       present_address: body.present_address,
       permanent_address: body.permanent_address,
+      separation_mode: body.separation_mode,
       aadhar_no: body.aadhar_no,
       pan_no: body.pan_no,
       physically_handicapped: body.physically_handicapped === 'YES' ? 1 : 0,
+      doj: body.doj,
+      date_of_transfer: body.date_of_transfer,
+      date_of_promotion: body.date_of_promotion,
+      date_of_leaving: body.date_of_leaving,
+      notice_period: body.notice_period,
+
+      updated_by: body.updated_by,
+      updated_at: now,
     });
 
     /* ---------------- JOINING DETAILS ---------------- */
@@ -85,39 +111,61 @@ export class EmployeeService {
       date_of_promotion: body.date_of_promotion,
       date_of_leaving: body.date_of_leaving,
       notice_period: body.notice_period,
+      emp_reference: body.employee_reference,
+      updated_by: body.updated_by,
+      updated_at: now,
     });
 
     /* ---------------- REPORTING MANAGERS ---------------- */
+    /**
+     * IMPORTANT:
+     * We CREATE new rows instead of UPDATE because
+     * reporting is relationship history, not state.
+     */
+
     if (body.reporting_to) {
       await this.reportingRepo.create({
         tenant_id: body.tenant_id,
         emp_id: employeeId,
         reporting_manager: body.reporting_to,
         type: REPORTING_TYPE.REPORTING_TO,
+
         created_by: body.updated_by,
+        created_at: now,
       });
     }
 
     if (body.leave_auth_manager) {
-      await this.reportingRepo.create({
-        tenant_id: body.tenant_id,
-        emp_id: employeeId,
-        reporting_manager: body.leave_auth_manager,
-        type: REPORTING_TYPE.REPORTING_MANAGER,
-        created_by: body.updated_by,
-      });
+      for (const auth_manager of body.leave_auth_manager) {
+        await this.reportingRepo.create({
+          tenant_id: body.tenant_id,
+          emp_id: employeeId,
+          reporting_manager: auth_manager,
+          type: REPORTING_TYPE.LEAVE_AUTH_MANAGER,
+          created_by: body.created_by,
+          created_at: now,
+        });
+      }
     }
 
     /* ---------------- EDUCATION ---------------- */
+    /**
+     * NOTE:
+     * Legacy behavior = append-only.
+     * No delete/update logic added here intentionally.
+     */
     if (Array.isArray(body.educational_details)) {
       for (const edu of body.educational_details) {
         await this.educationRepo.create({
           tenant_id: body.tenant_id,
           emp_id: employeeId,
+
           course_name: edu.course_name,
           university: edu.university,
           passing_year: edu.passing_year,
           grade: edu.grade,
+
+          created_at: now,
         });
       }
     }
@@ -128,12 +176,15 @@ export class EmployeeService {
         await this.professionalRepo.create({
           tenant_id: body.tenant_id,
           emp_id: employeeId,
+
           company: prof.company,
           designation: prof.designation,
           city: prof.city,
           experience: prof.experience,
           from_date: prof.from_date,
           to_date: prof.to_date,
+
+          created_at: now,
         });
       }
     }
@@ -144,28 +195,33 @@ export class EmployeeService {
         await this.familyRepo.create({
           tenant_id: body.tenant_id,
           emp_id: employeeId,
+
           relation: fam.relation,
           relative_name: fam.name,
           dob: fam.dob,
+
+          created_at: now,
         });
       }
     }
 
     logger.info({ employeeId }, 'Employee aggregate upsert completed');
   }
-  async createEmployeeAggregate(input: CreateEmployeeAggregateInput): Promise<number> {
-    const { body } = input;
 
-    logger.info('Creating employee aggregate');
+  async createEmployeeAggregate(input: CreateEmployeeAggregateInput): Promise<number> {
+    console.log('Creating employee aggregate with input:', input);
+    const { body } = input;
+    const now = new Date();
 
     /* ---------------- EMPLOYEE MASTER ---------------- */
     const employeeId = await this.employeeRepo.create({
       tenant_id: body.tenant_id,
-      actual_tenant_id: body.actual_tenant_id,
-      customer_id: body.customer_id,
+      actual_tenant_id: body.tenant_id,
       account_for: body.account_for,
       employee_id: body.employee_id,
 
+      pincode: body.pincode,
+      country_id: body.country_id,
       first_name: body.first_name,
       middle_name: body.middle_name,
       last_name: body.last_name,
@@ -173,54 +229,64 @@ export class EmployeeService {
 
       contact_no: body.contact_no,
       whats_app_contact_no: body.whats_app_contact_no,
-
-      role_id: body.role_id,
+      role_id: body.job_role,
+      gender: body.gender,
       department_id: body.department,
-      designation_id: body.designation_id,
       job_role: body.job_role,
-
-      user_name: body.user_name,
-      password: body.password, // already hashed upstream
+      profile_picture: body.profile_picture,
+      state_id: body.state_id,
+      city_id: body.city_id,
+      shift_type_id: body.shift_type_id,
+      designation_id: body.designation_id,
+      hired_branch_id: body.hired_branch_id,
       is_active: body.is_active ?? 1,
 
-      created_by: body.updated_by,
+      created_by: body.created_by,
+      created_at: now, // ✅ added
+      updated_at: now,
     });
 
     /* ---------------- EMPLOYEE DETAILS ---------------- */
     await this.detailsRepo.create({
       tenant_id: body.tenant_id,
       emp_id: employeeId,
-
       personal_email_id: body.personal_email_id,
       dob: body.dob,
-      gender: body.gender,
       blood_group: body.blood_group,
       marital_status: body.marital_status,
-
       emergency_contact: body.emergency_contact,
       present_address: body.present_address,
       permanent_address: body.permanent_address,
+      employee_title: body.employee_title,
+      separation_mode: body.separation_mode,
 
       aadhar_no: body.aadhar_no,
       pan_no: body.pan_no,
-
-      physically_handicapped: body.physically_handicapped === 'YES' ? 1 : 0,
-
-      created_by: body.updated_by,
-    });
-
-    /* ---------------- JOINING DETAILS ---------------- */
-    await this.joiningRepo.create({
-      tenant_id: body.tenant_id,
-      emp_id: employeeId,
-
       doj: body.doj,
       date_of_transfer: body.date_of_transfer,
       date_of_promotion: body.date_of_promotion,
       date_of_leaving: body.date_of_leaving,
       notice_period: body.notice_period,
 
+      physically_handicapped: body.physically_handicapped === 'YES' ? 1 : 0,
+
       created_by: body.updated_by,
+      created_at: now, // ✅ added
+      updated_at: now,
+    });
+
+    /* ---------------- JOINING DETAILS ---------------- */
+    await this.joiningRepo.create({
+      tenant_id: body.tenant_id,
+      emp_id: employeeId,
+      emp_reference: body.employee_reference,
+      doj: body.doj,
+      date_of_transfer: body.date_of_transfer,
+      date_of_promotion: body.date_of_promotion,
+      date_of_leaving: body.date_of_leaving,
+      notice_period: body.notice_period,
+      created_by: body.updated_by,
+      updated_at: now,
     });
 
     /* ---------------- REPORTING ---------------- */
@@ -230,18 +296,24 @@ export class EmployeeService {
         emp_id: employeeId,
         reporting_manager: body.reporting_to,
         type: REPORTING_TYPE.REPORTING_TO,
-        created_by: body.updated_by,
+        created_by: body.created_by,
+        created_at: now,
+        updated_at: now,
       });
     }
 
-    if (body.leave_auth_manager) {
-      await this.reportingRepo.create({
-        tenant_id: body.tenant_id,
-        emp_id: employeeId,
-        reporting_manager: body.leave_auth_manager,
-        type: REPORTING_TYPE.REPORTING_MANAGER,
-        created_by: body.updated_by,
-      });
+    if (Array.isArray(body.leave_auth_manager)) {
+      for (const auth_manager of body.leave_auth_manager) {
+        await this.reportingRepo.create({
+          tenant_id: body.tenant_id,
+          emp_id: employeeId,
+          reporting_manager: auth_manager,
+          type: REPORTING_TYPE.LEAVE_AUTH_MANAGER,
+          created_by: body.created_by,
+          created_at: now,
+          updated_at: now,
+        });
+      }
     }
 
     /* ---------------- EDUCATION ---------------- */
@@ -254,6 +326,8 @@ export class EmployeeService {
           university: edu.university,
           passing_year: edu.passing_year,
           grade: edu.grade,
+          created_at: now,
+          updated_at: now,
         });
       }
     }
@@ -270,6 +344,8 @@ export class EmployeeService {
           experience: prof.experience,
           from_date: prof.from_date,
           to_date: prof.to_date,
+          created_at: now,
+          updated_at: now,
         });
       }
     }
@@ -283,6 +359,8 @@ export class EmployeeService {
           relation: fam.relation,
           relative_name: fam.name,
           dob: fam.dob,
+          created_at: now,
+          updated_at: now,
         });
       }
     }

@@ -42,5 +42,9 @@ export class UserController {
     }
   };
 
-  postEmployee = async (req: Request, res: Response) => {};
+  postEmployee = async (req: Request, res: Response) => {
+    console.log('Post Employee called', req.body);
+
+    return res.send(buildSuccessResponse(null, 'Post Employee called successfully'));
+  };
 }

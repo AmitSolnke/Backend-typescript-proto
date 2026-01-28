@@ -29,6 +29,7 @@ export const createEmployeeMaster = async (req: Request, res: Response) => {
   logger.info('Employee master CREATE initiated');
 
   let employeeId: number;
+  console.log(req.body, 'req.body');
 
   await db.transaction(async (trx) => {
     const service = new EmployeeService(trx);

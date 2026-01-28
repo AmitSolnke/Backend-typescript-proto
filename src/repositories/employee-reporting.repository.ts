@@ -40,6 +40,7 @@ export class EmployeeReportingRepository {
   }
 
   async create(payload: any): Promise<number> {
+    console.log('Payload in Employee Reporting Repository Create:', payload);
     const [id] = await db(this.table).insert(payload);
     return id;
   }

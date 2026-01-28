@@ -25,9 +25,9 @@ export class EmployeeDetailsRepository {
     return id;
   }
 
-  async update(tenantId: number, id: number, payload: any): Promise<number> {
+  async update(tenantId: number, empId: number, payload: any): Promise<number> {
     return db(this.table)
-      .where({ tenant_id: tenantId, id })
+      .where({ tenant_id: tenantId, emp_id: empId })
       .update({
         ...payload,
         updated_at: new Date(),
