@@ -54,4 +54,11 @@ export class EmployeeRepository {
       last_login: new Date(),
     });
   }
+  async findAuthUserById(id: number): Promise<{
+    id: number;
+    tenant_id: number;
+    employee_id: number;
+  } | null> {
+    return db(this.table).select('id', 'tenant_id', 'employee_id').where({ id }).first();
+  }
 }

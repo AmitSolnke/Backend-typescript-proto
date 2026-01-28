@@ -5,6 +5,7 @@ import {
   postEmployeeMaster,
   getEmployee,
 } from '../controllers/employee.controller';
+import { authMiddleware } from 'middlewares/auth.middleware';
 
 export function employeeRoutes() {
   const router = Router();
@@ -13,9 +14,9 @@ export function employeeRoutes() {
 
   //const upload = multer({ storage: multer.memoryStorage() });
 
-  router.get('/getData/:employeeId', upload.any(), getEmployee);
-  router.post('/postData', upload.any(), createEmployeeMaster);
-  router.post('/postData/:employeeId', upload.any(), postEmployeeMaster);
+  router.get('/getData/:employeeId', authMiddleware, upload.any(), getEmployee);
+  router.post('/postData', upload.any(), authMiddleware, createEmployeeMaster);
+  router.post('/postData/:employeeId', authMiddleware, upload.any(), postEmployeeMaster);
 
   return router;
 }
