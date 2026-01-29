@@ -257,9 +257,8 @@ export class EmployeeService {
           pickDefined({
             tenant_id: body.tenant_id,
             emp_id: employeeId,
-
             relation: fam.relation,
-            relative_name: fam.name,
+            relative_name: fam.relative_name,
             dob: fam.dob,
             created_at: now,
             updated_at: now,
@@ -370,7 +369,6 @@ export class EmployeeService {
         );
       }
     }
-    throw new Error('Debugging: Transaction reached before child creations.');
 
     /* ---------------- REPORTING ---------------- */
     if (body.reporting_to) {
@@ -455,7 +453,7 @@ export class EmployeeService {
             tenant_id: body.tenant_id,
             emp_id: employeeId,
             relation: fam.relation,
-            relative_name: fam.name,
+            relative_name: fam.relative_name,
             dob: fam.dob,
             created_by: userId,
             updated_by: userId,
@@ -489,6 +487,7 @@ export class EmployeeService {
       familyDetails,
       reportingTo,
       leaveAuthManagers,
+      leaveTemplateMappings,
     ] = await Promise.all([
       this.detailsRepo.findByEmployee(tenantId, employeeId),
       this.joiningRepo.findByEmployee(tenantId, employeeId),
@@ -501,6 +500,7 @@ export class EmployeeService {
         employeeId,
         REPORTING_TYPE.LEAVE_AUTH_MANAGER,
       ),
+      this.leaveTemplateRepo.findActiveByEmployee(tenantId, employeeId),
     ]);
 
     /* ---------------- REPORTING NAME RESOLUTION ---------------- */
@@ -519,6 +519,26 @@ export class EmployeeService {
           })),
         )
       : [];
+
+    const leaveTemplates =
+      leaveTemplateMappings && leaveTemplateMappings?.length > 0
+        ? await this.leaveTemplateRepo.findByIds(
+            tenantId,
+            leaveTemplateMappings.map((lt) => lt.leave_template_id),
+          )
+        : [];
+
+    const leaveTemplateNameMap = new Map<number, string>();
+
+    for (const tpl of leaveTemplates) {
+      leaveTemplateNameMap.set(tpl.leave_template_id, tpl?.leave_template_name);
+    }
+
+    const leaveTemplateResponse = leaveTemplateMappings?.map((lt) => ({
+      id: lt.id,
+      leave_template_id: lt.leave_template_id,
+      leave_template_name: leaveTemplateNameMap.get(lt.leave_template_id) ?? null,
+    }));
 
     /* ---------------- RESPONSE SHAPING ---------------- */
     return {
@@ -579,7 +599,7 @@ export class EmployeeService {
       leave_auth_managers: leaveAuthManagerNames,
 
       customer_type_id: String(employee.customer_id ?? 1),
-      leave_templates: [],
+      leave_templates: leaveTemplateResponse ?? [],
 
       professional_details: professionalDetails.map((p) => ({
         id: p.id,
