@@ -9,9 +9,8 @@ import { EmployeeProfessionalRepository } from '../repositories/employee-profess
 import { EmployeeFamilyRepository } from '../repositories/employee-family.repository';
 import { EmployeeReportingRepository } from '../repositories/employee-reporting.repository';
 import { REPORTING_TYPE } from '../common/constants/reporting.constants';
-import { pickDefined } from '@common/utils/object.util';
-import { LeaveTemplateMappingRepository } from '@repositories/leave-template-mapping.repository';
-
+import { LeaveTemplateMappingRepository } from '../repositories/leave-template-mapping.repository';
+import { pickDefined } from '../common/utils/object.util';
 interface EmployeeAggregateInput {
   employeeId: number;
   body: any;
@@ -511,7 +510,7 @@ export class EmployeeService {
 
     const leaveAuthManagerNames = leaveAuthManagers
       ? await Promise.all(
-          leaveAuthManagers.map(async (mgr) => ({
+          leaveAuthManagers.map(async (mgr: any) => ({
             id: mgr.reporting_manager,
             name: mgr.reporting_manager
               ? await this.resolveEmployeeName(tenantId, mgr.reporting_manager)
@@ -524,7 +523,7 @@ export class EmployeeService {
       leaveTemplateMappings && leaveTemplateMappings?.length > 0
         ? await this.leaveTemplateRepo.findByIds(
             tenantId,
-            leaveTemplateMappings.map((lt) => lt.leave_template_id),
+            leaveTemplateMappings.map((lt: any) => lt.leave_template_id),
           )
         : [];
 
@@ -534,7 +533,7 @@ export class EmployeeService {
       leaveTemplateNameMap.set(tpl.leave_template_id, tpl?.leave_template_name);
     }
 
-    const leaveTemplateResponse = leaveTemplateMappings?.map((lt) => ({
+    const leaveTemplateResponse = leaveTemplateMappings?.map((lt: any) => ({
       id: lt.id,
       leave_template_id: lt.leave_template_id,
       leave_template_name: leaveTemplateNameMap.get(lt.leave_template_id) ?? null,
@@ -601,7 +600,7 @@ export class EmployeeService {
       customer_type_id: String(employee.customer_id ?? 1),
       leave_templates: leaveTemplateResponse ?? [],
 
-      professional_details: professionalDetails.map((p) => ({
+      professional_details: professionalDetails.map((p: any) => ({
         id: p.id,
         company: p.company,
         designation: p.designation,
@@ -612,7 +611,7 @@ export class EmployeeService {
         to_date: p.to_date,
       })),
 
-      educational_details: educationalDetails.map((e) => ({
+      educational_details: educationalDetails.map((e: any) => ({
         id: e.id,
         university: e.university,
         passing_year: e.passing_year,
@@ -620,7 +619,7 @@ export class EmployeeService {
         grade: e.grade,
       })),
 
-      family_details: familyDetails.map((f) => ({
+      family_details: familyDetails.map((f: any) => ({
         id: f.id,
         relation: f.relation,
         relative_name: f.relative_name,

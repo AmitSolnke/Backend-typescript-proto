@@ -1,4 +1,4 @@
-import { TABLES } from '@common/constants/database';
+import { TABLES } from '../common/constants/database';
 import { db } from '../database/knex';
 
 import { EmployeeJoiningDetail } from '../models/employee-joining.model';

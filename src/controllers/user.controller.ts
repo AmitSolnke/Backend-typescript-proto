@@ -1,9 +1,8 @@
 import { Request, Response } from 'express';
-import { UserService } from '@services/user.service';
-import { buildSuccessResponse } from '@common/utils/response.util';
-import { StatusCodes } from '@common/constants/http-status';
-
-import { logger } from 'logger/pino.logger';
+import { UserService } from '../services/user.service';
+import { buildSuccessResponse } from '../common/utils/response.util';
+import { logger } from '../logger/pino.logger';
+import { StatusCodes } from '../common/constants/http-status';
 
 type UserControllerDeps = {
   userService: UserService;

@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     /* ---------- Language & Runtime ---------- */
     "target": "ES2021",
     "lib": ["ES2021"],
@@ -8,16 +7,15 @@
     "moduleResolution": "nodenext",
 
     /* ---------- Paths ---------- */
-    "baseUrl": "./src",
     "paths": {
-      "@config/*": ["config/*"],
-      "@common/*": ["common/*"],
-      "@services/*": ["services/*"],
-      "@repositories/*": ["repositories/*"],
-      "@controllers/*": ["controllers/*"],
-      "@models/*": ["models/*"],
-      "@routes/*": ["routes/*"],
-      "@validators/*": ["validators/*"]
+      "@config/*": ["/src/config/*"],
+      "@common/*": ["/src/common/*"],
+      "@services/*": ["/src/services/*"],
+      "@repositories/*": ["/src/repositories/*"],
+      "@controllers/*": ["/src/controllers/*"],
+      "@models/*": ["/src/models/*"],
+      "@routes/*": ["/src/routes/*"],
+      "@validators/*": ["/src/validators/*"]
     },
 
     /* ---------- Project Structure ---------- */

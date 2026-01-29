@@ -1,11 +1,11 @@
-import { AppError } from '@common/errors/app-error';
 import { Request, Response, NextFunction } from 'express';
+import { AppError } from '../common/errors/app-error';
 
 export function errorMiddleware(err: unknown, _req: Request, res: Response, _next: NextFunction) {
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
+    return res.status((err as AppError).statusCode).json({
       success: false,
-      message: err.message,
+      message: (err as AppError).message,
     });
   }
 

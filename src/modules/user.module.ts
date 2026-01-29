@@ -4,7 +4,7 @@ import { UserRepository } from '../repositories/user.repository';
 //import { AuthService } from '../services/auth.service';
 
 import { UserController } from '../controllers/user.controller';
-import { UserService } from '@services/user.service';
+import { UserService } from '../services/user.service';
 
 export function createUserController() {
   // repositories

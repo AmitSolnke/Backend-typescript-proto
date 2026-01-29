@@ -6,8 +6,8 @@ import {
   getEmployee,
   getAllEmployees,
 } from '../controllers/employee.controller';
-import { authMiddleware } from 'middlewares/auth.middleware';
-import { uploadEmployeeFiles } from 'middlewares/upload.middleware';
+import { uploadEmployeeFiles } from '../middlewares/upload.middleware';
+import { authMiddleware } from '../middlewares/auth.middleware';
 
 export function employeeRoutes() {
   const router = Router();

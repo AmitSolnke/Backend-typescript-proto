@@ -1,5 +1,5 @@
-import { LeaveTemplateMapping } from '@models/leave-template-mapping.model';
-import { db } from 'database/knex';
+import { db } from '../database/knex';
+import { LeaveTemplateMapping } from '../models/leave-template-mapping.model';
 
 const TABLE = 'hrms_leave_template_mapping_master';
 

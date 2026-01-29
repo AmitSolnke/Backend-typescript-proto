@@ -3,7 +3,7 @@ import { db } from '../database/knex';
 import { EmployeeReportingManager } from '../models/employee-reporting.model';
 
 import { REPORTING_TYPE } from '../common/constants/reporting.constants';
-import { TABLES } from '@common/constants/database';
+import { TABLES } from '../common/constants/database';
 
 export class EmployeeReportingRepository {
   private readonly table = TABLES.EMPLOYEE_REPORTING;

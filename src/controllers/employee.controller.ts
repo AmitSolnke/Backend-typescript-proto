@@ -5,9 +5,8 @@ import { StatusCodes } from '../common/constants/http-status';
 import { logger } from '../logger/pino.logger';
 
 import { EmployeeService } from '../services/employee.service';
-import { buildSuccessResponse } from '@common/utils/response.util';
-import { extractEmployeeFilePaths, MulterFieldFiles } from '@common/utils/file-upload.util';
-import { createEmployeeSchema } from '@validators/employee-create.schema';
+import { extractEmployeeFilePaths, MulterFieldFiles } from '../common/utils/file-upload.util';
+import { buildSuccessResponse } from '../common/utils/response.util';
 
 export const postEmployeeMaster = async (req: Request, res: Response) => {
   const employeeId = Number(req.params.employeeId);
