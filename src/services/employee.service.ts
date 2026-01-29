@@ -15,11 +15,13 @@ interface EmployeeAggregateInput {
   employeeId: number;
   body: any;
   userId: number;
+  tenantId: number;
   //files: Express.Multer.File[];
 }
 interface CreateEmployeeAggregateInput {
   body: any;
   userId?: number;
+  tenantId?: number;
   //files: Express.Multer.File[];
 }
 
@@ -45,14 +47,15 @@ export class EmployeeService {
   }
 
   async upsertEmployeeAggregate(input: EmployeeAggregateInput) {
-    const { employeeId, body, userId } = input;
+    const { employeeId, body, userId, tenantId } = input;
     const now = new Date();
 
     logger.info({ employeeId }, 'Upserting employee master');
 
     /* ---------------- EMPLOYEE MASTER ---------------- */
+    console.log('body', body);
     await this.employeeRepo.update(
-      body.tenant_id,
+      tenantId,
       employeeId,
       pickDefined({
         employee_id: body.employee_id,
@@ -84,7 +87,7 @@ export class EmployeeService {
 
     /* ---------------- EMPLOYEE DETAILS ---------------- */
     await this.detailsRepo.update(
-      body.tenant_id,
+      tenantId,
       employeeId,
       pickDefined({
         personal_email_id: body.personal_email_id,
@@ -110,7 +113,7 @@ export class EmployeeService {
 
     /* ---------------- JOINING DETAILS ---------------- */
     await this.joiningRepo.update(
-      body.tenant_id,
+      tenantId,
       employeeId,
       pickDefined({
         doj: body.doj,
@@ -125,11 +128,11 @@ export class EmployeeService {
     );
 
     if (Array.isArray(body.leave_template)) {
-      await this.leaveTemplateRepo.deactivateExisting(body.tenant_id, employeeId, userId, now);
+      await this.leaveTemplateRepo.deactivateExisting(tenantId, employeeId, userId, now);
       for (const leaveTemplateId of body.leave_template) {
         await this.leaveTemplateRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
             leave_template_id: leaveTemplateId,
             created_at: now,
@@ -150,7 +153,7 @@ export class EmployeeService {
 
     if (body.reporting_to) {
       await this.reportingRepo.deactivateByEmployeeAndType(
-        body.tenant_id,
+        tenantId,
         employeeId,
         REPORTING_TYPE.REPORTING_TO,
         userId,
@@ -158,7 +161,7 @@ export class EmployeeService {
       );
       await this.reportingRepo.create(
         pickDefined({
-          tenant_id: body.tenant_id,
+          tenant_id: tenantId,
           emp_id: employeeId,
           reporting_manager: body.reporting_to,
           type: REPORTING_TYPE.REPORTING_TO,
@@ -172,7 +175,7 @@ export class EmployeeService {
 
     if (body.leave_auth_manager) {
       await this.reportingRepo.deactivateByEmployeeAndType(
-        body.tenant_id,
+        tenantId,
         employeeId,
         REPORTING_TYPE.LEAVE_AUTH_MANAGER,
         userId,
@@ -182,7 +185,7 @@ export class EmployeeService {
       for (const auth_manager of body.leave_auth_manager) {
         await this.reportingRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
             reporting_manager: auth_manager,
             type: REPORTING_TYPE.LEAVE_AUTH_MANAGER,
@@ -202,12 +205,12 @@ export class EmployeeService {
      * No delete/update logic added here intentionally.
      */
     if (Array.isArray(body.educational_details)) {
-      await this.educationRepo.deactivateByEmployee(body.tenant_id, employeeId, userId, now);
+      await this.educationRepo.deactivateByEmployee(tenantId, employeeId, userId, now);
 
       for (const edu of body.educational_details) {
         await this.educationRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
 
             course_name: edu.course_name,
@@ -225,12 +228,12 @@ export class EmployeeService {
 
     /* ---------------- PROFESSIONAL ---------------- */
     if (Array.isArray(body.professional_details)) {
-      await this.professionalRepo.deactivateByEmployee(body.tenant_id, employeeId, userId, now);
+      await this.professionalRepo.deactivateByEmployee(tenantId, employeeId, userId, now);
 
       for (const prof of body.professional_details) {
         await this.professionalRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
 
             company: prof.company,
@@ -250,11 +253,11 @@ export class EmployeeService {
 
     /* ---------------- FAMILY ---------------- */
     if (Array.isArray(body.family_details)) {
-      await this.familyRepo.deactivateByEmployee(body.tenant_id, employeeId, userId, now);
+      await this.familyRepo.deactivateByEmployee(tenantId, employeeId, userId, now);
       for (const fam of body.family_details) {
         await this.familyRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
             relation: fam.relation,
             relative_name: fam.relative_name,
@@ -273,14 +276,14 @@ export class EmployeeService {
 
   async createEmployeeAggregate(input: CreateEmployeeAggregateInput): Promise<number> {
     console.log('Creating employee aggregate with input:', input);
-    const { body, userId } = input;
+    const { body, userId, tenantId } = input;
     const now = new Date();
 
     /* ---------------- EMPLOYEE MASTER ---------------- */
     const employeeId = await this.employeeRepo.create(
       pickDefined({
-        tenant_id: body.tenant_id,
-        actual_tenant_id: body.tenant_id,
+        tenant_id: tenantId,
+        actual_tenant_id: tenantId,
         account_for: body.account_for,
         employee_id: body?.employee_id || null,
         pincode: body?.pincode || null,
@@ -312,7 +315,7 @@ export class EmployeeService {
     /* ---------------- EMPLOYEE DETAILS ---------------- */
     await this.detailsRepo.create(
       pickDefined({
-        tenant_id: body.tenant_id,
+        tenant_id: tenantId,
         emp_id: employeeId,
         personal_email_id: body.personal_email_id,
         dob: body.dob,
@@ -343,7 +346,7 @@ export class EmployeeService {
     /* ---------------- JOINING DETAILS ---------------- */
     await this.joiningRepo.create(
       pickDefined({
-        tenant_id: body.tenant_id,
+        tenant_id: tenantId,
         emp_id: employeeId,
         emp_reference: body.employee_reference,
         doj: body.doj,
@@ -361,7 +364,7 @@ export class EmployeeService {
       for (const templateId of body.leave_template) {
         await this.leaveTemplateRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
             template_id: templateId,
           }),
@@ -373,7 +376,7 @@ export class EmployeeService {
     if (body.reporting_to) {
       await this.reportingRepo.create(
         pickDefined({
-          tenant_id: body.tenant_id,
+          tenant_id: tenantId,
           emp_id: employeeId,
           reporting_manager: body.reporting_to,
           type: REPORTING_TYPE.REPORTING_TO,
@@ -389,7 +392,7 @@ export class EmployeeService {
       for (const auth_manager of body.leave_auth_manager) {
         await this.reportingRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
             reporting_manager: auth_manager,
             type: REPORTING_TYPE.LEAVE_AUTH_MANAGER,
@@ -407,7 +410,7 @@ export class EmployeeService {
       for (const edu of body.educational_details) {
         await this.educationRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
             course_name: edu.course_name,
             university: edu.university,
@@ -427,7 +430,7 @@ export class EmployeeService {
       for (const prof of body.professional_details) {
         await this.professionalRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
             company: prof.company,
             designation: prof.designation,
@@ -449,7 +452,7 @@ export class EmployeeService {
       for (const fam of body.family_details) {
         await this.familyRepo.create(
           pickDefined({
-            tenant_id: body.tenant_id,
+            tenant_id: tenantId,
             emp_id: employeeId,
             relation: fam.relation,
             relative_name: fam.relative_name,

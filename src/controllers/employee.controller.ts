@@ -15,6 +15,7 @@ export const postEmployeeMaster = async (req: Request, res: Response) => {
   const files = req.files;
   const filePaths = extractEmployeeFilePaths(files as MulterFieldFiles);
   const userId = req.userId;
+  const tenantId = req.tenantId;
   if (!userId) {
     throw new Error('User ID is required');
   }
@@ -26,6 +27,7 @@ export const postEmployeeMaster = async (req: Request, res: Response) => {
       employeeId,
       body: { ...req.body, ...filePaths },
       userId: userId,
+      tenantId: tenantId ?? 1,
     });
   });
 
@@ -39,6 +41,7 @@ export const createEmployeeMaster = async (req: Request, res: Response) => {
 
   let employeeId: number;
   const userId = req.userId;
+  const tenantId = req.tenantId;
   if (!userId) {
     throw new Error('User ID is required');
   }
@@ -51,6 +54,7 @@ export const createEmployeeMaster = async (req: Request, res: Response) => {
     employeeId = await service.createEmployeeAggregate({
       body: { ...req.body, ...filePaths },
       userId: req.userId!,
+      tenantId: tenantId ?? 1,
     });
   });
 
