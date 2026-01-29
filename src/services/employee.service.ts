@@ -10,6 +10,7 @@ import { EmployeeFamilyRepository } from '../repositories/employee-family.reposi
 import { EmployeeReportingRepository } from '../repositories/employee-reporting.repository';
 import { REPORTING_TYPE } from '../common/constants/reporting.constants';
 import { pickDefined } from '@common/utils/object.util';
+import { LeaveTemplateMappingRepository } from '@repositories/leave-template-mapping.repository';
 
 interface EmployeeAggregateInput {
   employeeId: number;
@@ -31,16 +32,17 @@ export class EmployeeService {
   private professionalRepo: EmployeeProfessionalRepository;
   private familyRepo: EmployeeFamilyRepository;
   private reportingRepo: EmployeeReportingRepository;
+  private leaveTemplateRepo: LeaveTemplateMappingRepository;
 
   constructor(private trx?: Knex.Transaction) {
     this.employeeRepo = new EmployeeRepository();
     this.detailsRepo = new EmployeeDetailsRepository();
     this.joiningRepo = new EmployeeJoiningRepository();
-    //disable existing
     this.educationRepo = new EmployeeEducationRepository();
     this.professionalRepo = new EmployeeProfessionalRepository();
     this.familyRepo = new EmployeeFamilyRepository();
     this.reportingRepo = new EmployeeReportingRepository();
+    this.leaveTemplateRepo = new LeaveTemplateMappingRepository();
   }
 
   async upsertEmployeeAggregate(input: EmployeeAggregateInput) {
@@ -122,6 +124,23 @@ export class EmployeeService {
         updated_at: now,
       }),
     );
+
+    if (Array.isArray(body.leave_template)) {
+      await this.leaveTemplateRepo.deactivateExisting(body.tenant_id, employeeId, userId, now);
+      for (const leaveTemplateId of body.leave_template) {
+        await this.leaveTemplateRepo.create(
+          pickDefined({
+            tenant_id: body.tenant_id,
+            emp_id: employeeId,
+            leave_template_id: leaveTemplateId,
+            created_at: now,
+            updated_at: now,
+            created_by: userId,
+            updated_by: userId,
+          }),
+        );
+      }
+    }
 
     /* ---------------- REPORTING MANAGERS ---------------- */
     /**
@@ -339,6 +358,19 @@ export class EmployeeService {
         updated_at: now,
       }),
     );
+
+    if (Array.isArray(body.leave_template)) {
+      for (const templateId of body.leave_template) {
+        await this.leaveTemplateRepo.create(
+          pickDefined({
+            tenant_id: body.tenant_id,
+            emp_id: employeeId,
+            template_id: templateId,
+          }),
+        );
+      }
+    }
+    throw new Error('Debugging: Transaction reached before child creations.');
 
     /* ---------------- REPORTING ---------------- */
     if (body.reporting_to) {
