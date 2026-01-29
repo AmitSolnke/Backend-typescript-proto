@@ -7,6 +7,7 @@ import {
   getAllEmployees,
 } from '../controllers/employee.controller';
 import { authMiddleware } from 'middlewares/auth.middleware';
+import { uploadEmployeeFiles } from 'middlewares/upload.middleware';
 
 export function employeeRoutes() {
   const router = Router();
@@ -15,10 +16,28 @@ export function employeeRoutes() {
 
   //const upload = multer({ storage: multer.memoryStorage() });
 
-  router.get('/getData', authMiddleware, upload.any(), getAllEmployees);
-  router.get('/getData/:employeeId', authMiddleware, upload.any(), getEmployee);
-  router.post('/postData', upload.any(), authMiddleware, createEmployeeMaster);
-  router.post('/postData/:employeeId', authMiddleware, upload.any(), postEmployeeMaster);
+  router.get('/getData', authMiddleware, getAllEmployees);
+  router.get('/getData/:employeeId', authMiddleware, getEmployee);
+  router.post(
+    '/postData',
+    authMiddleware,
+    uploadEmployeeFiles.fields([
+      { name: 'profile_picture', maxCount: 1 },
+      { name: 'pan_photo', maxCount: 1 },
+      { name: 'aadhar_photo', maxCount: 1 },
+    ]),
+    createEmployeeMaster,
+  );
+  router.post(
+    '/postData/:employeeId',
+    authMiddleware,
+    uploadEmployeeFiles.fields([
+      { name: 'profile_picture', maxCount: 1 },
+      { name: 'pan_photo', maxCount: 1 },
+      { name: 'aadhar_photo', maxCount: 1 },
+    ]),
+    postEmployeeMaster,
+  );
 
   return router;
 }

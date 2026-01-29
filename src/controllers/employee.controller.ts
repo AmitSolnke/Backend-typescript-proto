@@ -6,19 +6,27 @@ import { logger } from '../logger/pino.logger';
 
 import { EmployeeService } from '../services/employee.service';
 import { buildSuccessResponse } from '@common/utils/response.util';
+import { extractEmployeeFilePaths, MulterFieldFiles } from '@common/utils/file-upload.util';
+import { createEmployeeSchema } from '@validators/employee-create.schema';
 
 export const postEmployeeMaster = async (req: Request, res: Response) => {
   const employeeId = Number(req.params.employeeId);
 
   logger.info({ employeeId }, 'Employee master POST initiated');
+  const files = req.files;
+  const filePaths = extractEmployeeFilePaths(files as MulterFieldFiles);
+  const userId = req.userId;
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
 
   await db.transaction(async (trx) => {
     const service = new EmployeeService(trx);
 
     await service.upsertEmployeeAggregate({
       employeeId,
-      body: req.body,
-      // files: req.files as Express.Multer.File[],
+      body: { ...req.body, ...filePaths },
+      userId: userId,
     });
   });
 
@@ -28,15 +36,22 @@ export const postEmployeeMaster = async (req: Request, res: Response) => {
 export const createEmployeeMaster = async (req: Request, res: Response) => {
   logger.info('Employee master CREATE initiated');
 
+  const filePaths = extractEmployeeFilePaths(req.files as MulterFieldFiles);
+
   let employeeId: number;
+  const userId = req.userId;
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+
+  console.log('filePaths', filePaths);
 
   await db.transaction(async (trx) => {
     const service = new EmployeeService(trx);
 
     employeeId = await service.createEmployeeAggregate({
-      body: req.body,
-      userId: req.userId,
-      // files: req.files as Express.Multer.File[],
+      body: { ...req.body, ...filePaths },
+      userId: req.userId!,
     });
   });
 
