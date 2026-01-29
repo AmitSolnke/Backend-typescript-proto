@@ -366,7 +366,11 @@ export class EmployeeService {
           pickDefined({
             tenant_id: tenantId,
             emp_id: employeeId,
-            template_id: templateId,
+            leave_template_id: templateId,
+            created_at: now,
+            updated_at: now,
+            created_by: userId,
+            updated_by: userId,
           }),
         );
       }
