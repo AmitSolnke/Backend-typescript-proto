@@ -34,7 +34,9 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
   let decoded: AuthTokenPayload;
 
   try {
-    decoded = jwt.verify(token, env.JWT_SECRET) as AuthTokenPayload;
+    decoded = jwt.verify(token, env.JWT_SECRET, {
+      clockTolerance: 5,
+    }) as AuthTokenPayload;
   } catch (err) {
     logger.warn({ err }, 'Invalid or expired JWT token');
 
@@ -46,7 +48,6 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
   /* ---------- DB lookup ---------- */
   try {
     const employeeRepo = new EmployeeRepository();
-
     const user = await employeeRepo.findAuthUserById(userId);
 
     if (!user) {
