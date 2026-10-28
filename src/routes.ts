@@ -1,6 +1,6 @@
 import { Express } from 'express';
-import { userRoutes } from './routes/user.routes';
-import { employeeRoutes } from './routes/employee.routes';
+import { userRoutes } from './modules/user';
+import { employeeRoutes } from './modules/employee';
 
 export function registerRoutes(app: Express) {
   app.use('/users', userRoutes());

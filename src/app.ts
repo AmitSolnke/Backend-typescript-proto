@@ -4,8 +4,8 @@ import helmet from 'helmet';
 
 import { registerRoutes } from './routes';
 
-import { notFoundMiddleware } from './middlewares/not-found.middleware';
-import { errorMiddleware } from './middlewares/error.middleware';
+import { notFoundMiddleware } from './common/middlewares/not-found.middleware';
+import { errorMiddleware } from './common/middlewares/error.middleware';
 
 export function createApp() {
   const app = express();

@@ -9,14 +9,11 @@
     /* ---------- Paths ---------- */
     "baseUrl": "./src",
     "paths": {
-      "@config/*": ["/src/config/*"],
-      "@common/*": ["/src/common/*"],
-      "@services/*": ["/src/services/*"],
-      "@repositories/*": ["/src/repositories/*"],
-      "@controllers/*": ["/src/controllers/*"],
-      "@models/*": ["/src/models/*"],
-      "@routes/*": ["/src/routes/*"],
-      "@validators/*": ["/src/validators/*"]
+      "@config/*": ["config/*"],
+      "@common/*": ["common/*"],
+      "@modules/*": ["modules/*"],
+      "@database/*": ["database/*"],
+      "@logger/*": ["logger/*"]
     },
 
     /* ---------- Project Structure ---------- */
