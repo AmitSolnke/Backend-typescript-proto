@@ -7,6 +7,7 @@
     "moduleResolution": "nodenext",
 
     /* ---------- Paths ---------- */
+    "baseUrl": "./src",
     "paths": {
       "@config/*": ["/src/config/*"],
       "@common/*": ["/src/common/*"],
